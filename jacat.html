@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escurçador d'URLs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        .form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+input, button {
+    width: calc(100% - 20px); /* Ajusta el ancho para dejar márgenes a los lados */
+    margin: 0 auto; /* Centra los elementos automáticamente */
+    margin-bottom: 15px; /* Separación entre los elementos */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Asegura que el padding no afecte el ancho */
+    display: block; /* Asegura que los elementos ocupen toda la línea */
+}
+
+button {
+    background-color: #f18e01;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.result {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #e9ffe9;
+    border: 1px solid #5cb85c;
+    border-radius: 5px;
+    color: #3c763d;
+}
+
+.error {
+    color: red;
+}
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Escurçador d'URLs - ja.cat</h2>
+		<h3><i>El resultat tindrà el format ja.cat/<span style="color: #f18e01;">sufix</span> i es desarà al compte <span style="color: #f18e01;">ajimen49</span>.</i></h3>
+        <form id="url-form">
+            <label for="long-url">URL llarga:</label>
+            <input type="url" id="long-url" placeholder="Introdueix aquí l'URL llarga." required>
+            <br>
+            <label for="custom-ending">Sufix personalitzat:</label>
+            <input type="text" id="custom-ending" placeholder="Introdueix aquí el teu sufix personalitzat (opcional)">
+            <br>
+            <button type="submit"><strong>GENERA L'URL CURTA!</strong></button>
+        </form>
+        <div id="result" class="result" style="display: none;"></div>
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+    const apiKey = "3ab74e90a43e854e9004f1f3b019b4"; // Tu clave API
+    const baseUrl = "https://ja.cat/"; // Cambia por tu dominio Polr
+
+    document.getElementById("url-form").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const longUrl = document.getElementById("long-url").value;
+        const customEnding = document.getElementById("custom-ending").value;
+        const resultDiv = document.getElementById("result");
+        const errorDiv = document.getElementById("error");
+
+        // Limpiar mensajes anteriores
+        resultDiv.style.display = "none";
+        errorDiv.style.display = "none";
+
+        // Construir la URL de la API
+        const apiUrl = `${baseUrl}/api/v2/action/shorten?key=${apiKey}&url=${encodeURIComponent(longUrl)}${customEnding ? `&custom_ending=${customEnding}` : ""}`;
+
+        try {
+            const response = await fetch(apiUrl);
+            const contentType = response.headers.get("content-type");
+            let data;
+
+            // Manejar diferentes tipos de respuesta
+            if (contentType.includes("application/json")) {
+                data = await response.json();
+            } else {
+                data = await response.text();
+            }
+
+            if (response.ok) {
+                if (typeof data === "string") {
+                    resultDiv.textContent = `URL corta generada: ${data}`;
+                } else if (data.result) {
+                    resultDiv.textContent = `URL corta generada: ${data.result}`;
+                }
+                resultDiv.style.display = "block";
+            } else {
+                const errorMessage = typeof data === "string" ? data : data.error || "Ocurrió un error desconocido.";
+                throw new Error(errorMessage);
+            }
+        } catch (error) {
+            errorDiv.textContent = `Error: ${error.message}`;
+            errorDiv.style.display = "block";
+        }
+    });
+</script>
+
+</body>
+</html>
